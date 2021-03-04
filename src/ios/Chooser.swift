@@ -10,7 +10,8 @@ class ChooserUIDocumentPickerViewController : UIDocumentPickerViewController {
 @objc(Chooser)
 class Chooser : CDVPlugin {
 	var commandCallback: String?
-
+    var fileUrls: [URL] = [];
+    
 	func callPicker (includeData: Bool, utis: [String]) {
 		let picker = ChooserUIDocumentPickerViewController(documentTypes: utis, in: .import)
 		picker.delegate = self
@@ -37,6 +38,7 @@ class Chooser : CDVPlugin {
 
 	func documentWasSelected (includeData: Bool, url: URL) {
 		var error: NSError?
+		fileUrls.append(url);
 
 		NSFileCoordinator().coordinate(
 			readingItemAt: url,
@@ -44,12 +46,14 @@ class Chooser : CDVPlugin {
 			error: &error
 		) { newURL in
 			let maybeData = try? Data(contentsOf: newURL, options: [])
-
+            
 			guard let data = maybeData else {
 				self.sendError("Failed to fetch data.")
 				return
 			}
 
+			fileUrls.append(newURL);
+           
 			do {
 				let result = [
 					"data": includeData ? data.base64EncodedString() : "",
@@ -71,7 +75,6 @@ class Chooser : CDVPlugin {
 					self.sendError("Serializing result failed.")
 				}
 
-				newURL.stopAccessingSecurityScopedResource()
 			}
 			catch let error {
 				self.sendError(error.localizedDescription)
@@ -81,8 +84,6 @@ class Chooser : CDVPlugin {
 		if let error = error {
 			self.sendError(error.localizedDescription)
 		}
-
-		url.stopAccessingSecurityScopedResource()
 	}
 
 	@objc(getFile:)
@@ -129,6 +130,15 @@ class Chooser : CDVPlugin {
 		self.callPicker(includeData: includeData, utis: utis)
 	}
 
+    @objc(releaseFiles:)
+    func releaseFiles (command: CDVInvokedUrlCommand) {
+        for url in fileUrls {
+            url.stopAccessingSecurityScopedResource()
+        }
+        fileUrls.removeAll()
+        send("OK");
+    }
+    
 	func send (_ message: String, _ status: CDVCommandStatus = CDVCommandStatus_OK) {
 		if let callbackId = self.commandCallback {
 			self.commandCallback = nil

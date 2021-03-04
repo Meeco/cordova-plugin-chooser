@@ -108,10 +108,15 @@ function getFileInternal (
 }
 
 module.exports = {
-	getFile: function (accept, successCallback, failureCallback) {
-		return getFileInternal(accept, true, successCallback, failureCallback);
-	},
-	getFileMetadata: function (accept, successCallback, failureCallback) {
-		return getFileInternal(accept, false, successCallback, failureCallback);
-	}
+  getFile: function (accept, successCallback, failureCallback) {
+    return getFileInternal(accept, true, successCallback, failureCallback);
+  },
+  releaseFiles: function () {
+    return new Promise(function (resolve, reject) {
+      cordova.exec(resolve, reject, "Chooser", "releaseFiles", []);
+    });
+  },
+  getFileMetadata: function (accept, successCallback, failureCallback) {
+    return getFileInternal(accept, false, successCallback, failureCallback);
+  },
 };
