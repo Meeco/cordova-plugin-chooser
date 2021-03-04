@@ -104,7 +104,7 @@ class Chooser : CDVPlugin {
 				case "text/*":
 					return kUTTypeText as String
 				case "video/*":
-					return kUTTypeVideo as String
+					return kUTTypeMovie as String
 				default:
 					break
 			}
